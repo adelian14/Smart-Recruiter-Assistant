@@ -1,0 +1,36 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*.so
+
+# VSCode settings
+.vscode/
+
+# Logs and temp files
+*.log
+*.tmp
+*.bak
+
+# Virtual environments
+env/
+venv/
+.venv/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Python env/cache
+*.egg-info/
+.eggs/
+pip-log.txt
+
+# Application-specific
+data/uploads/
+data/sample_cvs/
+data/vector_db/
+data/chunks_log.txt
+
+# Ollama models and cache
+.ollama/
+
