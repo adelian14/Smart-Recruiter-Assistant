@@ -4,7 +4,7 @@ import os
 import shutil
 from pathlib import Path
 from utils.parser import parse_multiple, structure_and_save
-from utils.embedding import create_or_update_chroma, delete_chroma_db
+from utils.embedding import create_chroma
 
 
 # === Paths ===
@@ -53,44 +53,58 @@ def upload_and_process_files(files):
 
 # === Step 2: Structure + Save ===
 def store_structured_files():
-    global parsed_files
-    if not parsed_files:
-        return "⚠️ No parsed content."
+    upload_paths = list(UPLOAD_DIR.glob("*"))
 
-    structured_paths = structure_and_save(parsed_files)
+    if not upload_paths:
+        return "⚠️ No uploaded files found."
+
+    parsed = parse_multiple(upload_paths)
+
+    if not parsed:
+        return "❌ Parsing failed for uploaded files."
+
+    structured_paths = structure_and_save(parsed)
+
     if not structured_paths:
         return "❌ Structuring failed."
 
-    return f"✅ Stored {len(structured_paths)} structured CV(s)."
+    return f"✅ Structured and saved {len(structured_paths)} CV(s) from uploaded files."
 
 
 # === Step 3: Store in vector db ===
 def store_to_vector_db():
-    vectorstore = create_or_update_chroma()
+    vectorstore = create_chroma()
     if vectorstore is None:
         return "❌ No documents found to embed."
 
     return f"✅ Stored {len(vectorstore._collection.get()['documents'])} Chunk(s) in ChromaDB."
 
-# === Clear All ===
 def clear_uploads():
     global uploaded_files, parsed_files
     uploaded_files = []
     parsed_files = []
 
-    removed = 0
-    for folder in [UPLOAD_DIR, CV_DIR]:
-        for f in folder.glob("*"):
-            try:
-                f.unlink()
-                removed += 1
-            except Exception as e:
-                print(f"⚠️ Could not delete {f.name}: {e}")
+    upload_removed = 0
+    processed_removed = 0
 
-    # Clear Chroma vector DB too
-    delete_chroma_db()
+    for f in UPLOAD_DIR.glob("*"):
+        try:
+            f.unlink()
+            upload_removed += 1
+        except Exception as e:
+            print(f"⚠️ Could not delete {f.name}: {e}")
 
-    return f"🧹 Cleared",f"🧹 Cleared",f"🧹 Cleared"
+    for f in CV_DIR.glob("*"):
+        try:
+            f.unlink()
+            processed_removed += 1
+        except Exception as e:
+            print(f"⚠️ Could not delete {f.name}: {e}")
+
+    upload_msg = f"🧹 Cleared {upload_removed} uploaded file(s)." if upload_removed else "ℹ️ No uploaded files to clear."
+    processed_msg = f"🧹 Cleared {processed_removed} processed CV(s)." if processed_removed else "ℹ️ No processed CVs to clear."
+
+    return upload_msg, processed_msg
 
 # === UI ===
 with gr.Blocks(title="Smart Recruiter Assistant", css="""
@@ -147,7 +161,7 @@ with gr.Blocks(title="Smart Recruiter Assistant", css="""
             file_upload.upload(upload_and_process_files, inputs=file_upload, outputs=upload_status)
             process_btn.click(store_structured_files, inputs=None, outputs=process_status)
             store_btn.click(store_to_vector_db, inputs=None, outputs=store_status)
-            clear_btn.click(clear_uploads, inputs=None, outputs=[upload_status,process_status,store_status])
+            clear_btn.click(clear_uploads, inputs=None, outputs=[upload_status,process_status])
 
         # === Tab 2: Chatbot ===
         with gr.Tab("💬 CV Chatbot"):

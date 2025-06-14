@@ -3,10 +3,9 @@ from langchain_community.document_loaders import TextLoader
 from langchain_core.documents import Document
 from langchain_ollama import OllamaEmbeddings
 from .config import settings
+from .logger import log_chunks_to_file
 from pathlib import Path
-import shutil
-import os
-import re
+
 
 CHROMA_DIR = Path("data/vector_db")
 SAMPLE_CVS_DIR = Path("data/sample_cvs")
@@ -23,15 +22,6 @@ def chunk_by_blank_lines(texts: list[str], metadatas: list[dict]) -> list[Docume
             documents.append(Document(page_content=section, metadata=metadata))
 
     return documents
-
-
-def log_chunks_to_file(documents: list[Document], log_path="data/chunks_log.txt"):
-    with open(log_path, "w", encoding="utf-8") as f:
-        for i, doc in enumerate(documents):
-            fname = doc.metadata.get("filename", f"doc_{i}")
-            f.write(f"\n--- Chunk {i+1} from {fname} ---\n")
-            f.write(doc.page_content + "\n")
-            f.write(f"Length: {len(doc.page_content)} characters\n")
 
 
 def get_cv_documents():
@@ -53,21 +43,40 @@ def get_cv_documents():
 
 
 
-def create_or_update_chroma():
-    CHROMA_DIR.mkdir(parents=True, exist_ok=True)
-    documents = get_cv_documents()
+def create_chroma():
+    try:
+        vectorstore = Chroma(
+            embedding_function=embedding_model,
+            persist_directory=str(CHROMA_DIR)
+        )
 
+        # Fetch and delete all IDs manually
+        all_ids = vectorstore._collection.get()["ids"]
+        if all_ids:
+            vectorstore._collection.delete(ids=all_ids)
+            print(f"🧹 Deleted {len(all_ids)} record(s) from ChromaDB.")
+        else:
+            print("ℹ️ No records found to delete.")
+
+    except Exception as e:
+        print(f"⚠️ Could not load existing DB (may be empty): {e}")
+        CHROMA_DIR.mkdir(parents=True, exist_ok=True)
+        vectorstore = None
+
+    # Load current documents
+    documents = get_cv_documents()
     if not documents:
-        print("⚠️ No documents found to embed.")
+        print("⚠️ No valid CVs to embed.")
         return None
 
+    # Rebuild ChromaDB with clean data
     vectorstore = Chroma.from_documents(
         documents=documents,
         embedding=embedding_model,
         persist_directory=str(CHROMA_DIR)
     )
+    print(f"✅ Rebuilt ChromaDB with {len(documents)} document(s).")
 
-    print(f"✅ Stored {len(documents)} CVs in ChromaDB.")
     return vectorstore
 
 def load_chroma():
@@ -75,40 +84,3 @@ def load_chroma():
         embedding_function=embedding_model,
         persist_directory=str(CHROMA_DIR)
     )
-
-def delete_chroma_db():
-    """
-    1. Deletes all records from the default (or current) collection.
-    2. Removes every subdirectory under CHROMA_DIR (these are the per-collection folders).
-    3. Leaves CHROMA_DIR itself and its root-level DB/index files in place.
-    """
-    if not CHROMA_DIR.exists():
-        print("ℹ️ ChromaDB directory does not exist.")
-        return
-
-    # Step 1 – clear the collection’s records
-    try:
-        vectorstore = Chroma(
-            embedding_function=embedding_model,
-            persist_directory=str(CHROMA_DIR)
-        )
-        vectorstore.delete_collection()
-        print("🗑️ All ChromaDB records deleted.")
-    except Exception as e:
-        print(f"⚠️ Could not delete collection records: {e}")
-
-    # Step 2 – remove every sub-folder (collections) but keep root DB files
-    removed_dirs = 0
-    for path in CHROMA_DIR.iterdir():
-        if path.is_dir():
-            try:
-                shutil.rmtree(path, ignore_errors=True)
-                removed_dirs += 1
-            except Exception as e:
-                print(f"⚠️ Failed to remove {path}: {e}")
-
-    print(f"📁 Removed {removed_dirs} collection folder(s); root DB preserved.")
-
-
-
-

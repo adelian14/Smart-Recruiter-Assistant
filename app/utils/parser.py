@@ -64,14 +64,21 @@ def structure_and_save(parsed_cvs: List[dict]) -> List[Path]:
 
     for parsed in parsed_cvs:
         try:
-            structured = extract_structured_cv(parsed["text"])
             out_name = Path(parsed["filename"]).stem + ".txt"
             out_path = STRUCTURED_CV_DIR / out_name
+
+            if out_path.exists() and out_path.stat().st_size > 10:
+                print(f"⏭️ Skipping already structured: {out_path.name}")
+                saved_paths.append(out_path)
+                continue
+
+            structured = extract_structured_cv(parsed["text"])
 
             with open(out_path, "w", encoding="utf-8") as f:
                 f.write(structured)
 
             saved_paths.append(out_path)
+
         except Exception as e:
             print(f"❌ Failed to structure {parsed['filename']}: {e}")
 
