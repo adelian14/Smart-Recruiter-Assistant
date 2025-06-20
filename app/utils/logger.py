@@ -19,7 +19,7 @@ def log_debug(question: str, context: str):
 def log_chunks_to_file(documents: list[Document]):
     with open(CHUNKS_LOG_FILE, "w", encoding="utf-8") as f:
         for i, doc in enumerate(documents):
-            fname = doc.metadata.get("filename", f"doc_{i}")
+            fname = doc.metadata.get("candidate_name", f"doc_{i}")
             f.write(f"\n--- Chunk {i+1} from {fname} ---\n")
             f.write(doc.page_content + "\n")
             f.write(f"Length: {len(doc.page_content)} characters\n")

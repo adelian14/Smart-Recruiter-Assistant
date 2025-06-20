@@ -5,7 +5,7 @@ import docx2txt
 import os
 from typing import List
 from pathlib import Path
-from .llm_extractor import extract_structured_cv
+from .llm_extractor import get_candidate_name
 
 SUPPORTED_EXTENSIONS = [".pdf", ".docx", ".txt"]
 STRUCTURED_CV_DIR = Path("data/sample_cvs")
@@ -58,24 +58,27 @@ def parse_multiple(files: List[Path]) -> List[dict]:
             print(f"❌ Failed to parse {f.name}: {e}")
     return parsed_cvs
 
-
 def structure_and_save(parsed_cvs: List[dict]) -> List[Path]:
     saved_paths = []
 
     for parsed in parsed_cvs:
         try:
-            out_name = Path(parsed["filename"]).stem + ".txt"
+            candidate_name = get_candidate_name(parsed["text"])
+            if not candidate_name:
+                candidate_name = parsed['filename']
+            parsed['candidate_name']=candidate_name
+                
+            out_name = Path(parsed['candidate_name']).stem + ".txt"
             out_path = STRUCTURED_CV_DIR / out_name
 
-            if out_path.exists() and out_path.stat().st_size > 10:
-                print(f"⏭️ Skipping already structured: {out_path.name}")
-                saved_paths.append(out_path)
-                continue
+            #if out_path.exists() and out_path.stat().st_size > 10:
+                #print(f"⏭️ Skipping already structured: {out_path.name}")
+                #saved_paths.append(out_path)
+                #continue
 
-            structured = extract_structured_cv(parsed["text"])
 
             with open(out_path, "w", encoding="utf-8") as f:
-                f.write(structured)
+                f.write(parsed['text'])
 
             saved_paths.append(out_path)
 
@@ -83,4 +86,3 @@ def structure_and_save(parsed_cvs: List[dict]) -> List[Path]:
             print(f"❌ Failed to structure {parsed['filename']}: {e}")
 
     return saved_paths
-

@@ -23,6 +23,34 @@ def chunk_by_blank_lines(texts: list[str], metadatas: list[dict]) -> list[Docume
 
     return documents
 
+def chunk_cvs(texts: list[str], metadatas: list[dict], chunk_size: int = 50, overlap: int = 10) -> list[Document]:
+    assert len(texts) == len(metadatas), "texts and metadatas must have the same length"
+    assert 0 <= overlap < chunk_size, "overlap must be non-negative and smaller than chunk_size"
+
+    def split_into_chunks(text: str) -> list[str]:
+        words = text.split()
+        chunks = []
+        start = 0
+        while start < len(words):
+            end = start + chunk_size
+            # If it's the final chunk and too small, merge with previous
+            if len(words) - start < chunk_size // 2 and chunks:
+                chunks[-1].extend(words[start:])
+                break
+            chunk = words[start:end]
+            chunks.append(chunk)
+            if end >= len(words): break
+            start += chunk_size - overlap
+        return [' '.join(chunk) for chunk in chunks]
+
+    all_docs = []
+    for text, metadata in zip(texts, metadatas):
+        for chunk in split_into_chunks(text):
+            print(metadata)
+            all_docs.append(Document(page_content=chunk, metadata=metadata))
+    
+    return all_docs
+
 
 def get_cv_documents():
     texts = []
@@ -33,15 +61,13 @@ def get_cv_documents():
             with open(file, "r", encoding="utf-8") as f:
                 content = f.read().strip()
                 texts.append(content)
-                metadatas.append({"filename": file.name})
+                metadatas.append({'candidate_name':Path(file.name).stem})
         except Exception as e:
             print(f"❌ Failed to read {file.name}: {e}")
 
-    docs = chunk_by_blank_lines(texts, metadatas)
+    docs = chunk_cvs(texts, metadatas)
     log_chunks_to_file(docs)
     return docs
-
-
 
 def create_chroma():
     try:
@@ -84,3 +110,4 @@ def load_chroma():
         embedding_function=embedding_model,
         persist_directory=str(CHROMA_DIR)
     )
+

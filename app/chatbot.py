@@ -6,6 +6,7 @@ from utils.config import settings
 from utils.embedding import load_chroma  # ← Loads the vector store
 from utils.logger import log_debug
 from langchain_core.documents import Document
+from collections import defaultdict
 
 llm = ChatOllama(
     model=settings.LLM_MODEL,
@@ -14,23 +15,31 @@ llm = ChatOllama(
 )
 
 vectorstore = load_chroma()
-retriever = vectorstore.as_retriever(search_type="similarity", search_kwargs={"k": 10})
+retriever = vectorstore.as_retriever(search_type="similarity", search_kwargs={"k": 15})
 
 # Prompt template
 prompt = ChatPromptTemplate.from_template("""
-You are a helpful recruitment assistant. Use the following candidate profiles to answer the question. Be precise and use only the provided context.
+You are a skilled recruitment assistant. The context below contains partial excerpts from candidate CVs.
+
+Your task is to answer the question using **only** the information in the context. Be specific and factual.
+
+Include any relevant supporting details found in the context to make the answer clear and informative. However, do **not** refer to the context or mention that the answer is based on the context.
+
+Avoid filler phrases. Just state the facts plainly. If the information is missing, say so clearly.
 
 Context:
 {context}
 
 Question:
 {question}
+
+Answer:
 """)
+
+
 
 # Chain
 chain = prompt | llm
-
-from collections import defaultdict
 
 def stream_answer(question: str):
     # Step 1: Retrieve documents
@@ -39,17 +48,15 @@ def stream_answer(question: str):
     # Step 2: Group chunks by candidate filename
     grouped_docs = defaultdict(list)
     for doc in docs:
-        key = doc.metadata.get("filename", "unknown")
+        key = doc.metadata.get("candidate_name", "unknown")
         grouped_docs[key].append(doc.page_content)
 
     # Step 3: Construct context block for each candidate
-    context_blocks = []
+    full_context = ''
     for candidate, texts in grouped_docs.items():
         block = "\n".join(texts)
-        context_blocks.append(block)
-
-    # Step 4: Join all context blocks clearly
-    full_context = "\n\n---\n\n".join(context_blocks)
+        full_context = full_context + '\n' +f'------The following chunk belongs to {candidate}------' + '\n'
+        full_context = full_context + block + '\n\n'
     
     log_debug(question, full_context)
     
