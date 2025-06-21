@@ -1,18 +1,15 @@
-# Re-import necessary modules after environment reset
 from pathlib import Path
 from sklearn.feature_extraction.text import TfidfVectorizer
 from typing import List
 import re
 import pandas as pd
 import math
-
-
-CV_DIR = Path("data/sample_cvs")
+from app.utils.config import settings
 
 def read_cvs_from_directory() -> dict:
-    directory = Path(CV_DIR)
+    directory = Path(settings.CVS_DIR)
     if not directory.exists() or not directory.is_dir():
-        raise ValueError(f"Invalid directory: {CV_DIR}")
+        raise ValueError(f"Invalid directory: {settings.CVS_DIR}")
     
     cv_dict = {}
     for file in directory.glob("*.txt"):

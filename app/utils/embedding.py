@@ -6,10 +6,6 @@ from app.utils.config import settings
 from app.utils.logger import log_chunks_to_file
 from pathlib import Path
 
-
-CHROMA_DIR = Path("data/vector_db")
-SAMPLE_CVS_DIR = Path("data/sample_cvs")
-
 embedding_model = OllamaEmbeddings(model=settings.EMBEDDING_MODEL)
 
 def chunk_by_blank_lines(texts: list[str], metadatas: list[dict]) -> list[Document]:
@@ -54,7 +50,7 @@ def get_cv_documents():
     texts = []
     metadatas = []
 
-    for file in SAMPLE_CVS_DIR.glob("*.txt"):
+    for file in settings.CVS_DIR.glob("*.txt"):
         try:
             with open(file, "r", encoding="utf-8") as f:
                 content = f.read().strip()
@@ -71,7 +67,7 @@ def create_chroma():
     try:
         vectorstore = Chroma(
             embedding_function=embedding_model,
-            persist_directory=str(CHROMA_DIR)
+            persist_directory=str(settings.DB_DIR)
         )
 
         all_ids = vectorstore._collection.get()["ids"]
@@ -83,7 +79,7 @@ def create_chroma():
 
     except Exception as e:
         print(f"⚠️ Could not load existing DB (may be empty): {e}")
-        CHROMA_DIR.mkdir(parents=True, exist_ok=True)
+        settings.DB_DIR.mkdir(parents=True, exist_ok=True)
         vectorstore = None
 
     documents = get_cv_documents()
@@ -94,7 +90,7 @@ def create_chroma():
     vectorstore = Chroma.from_documents(
         documents=documents,
         embedding=embedding_model,
-        persist_directory=str(CHROMA_DIR)
+        persist_directory=str(settings.DB_DIR)
     )
     print(f"✅ Rebuilt ChromaDB with {len(documents)} document(s).")
 
@@ -103,6 +99,6 @@ def create_chroma():
 def load_chroma():
     return Chroma(
         embedding_function=embedding_model,
-        persist_directory=str(CHROMA_DIR)
+        persist_directory=str(settings.DB_DIR)
     )
 

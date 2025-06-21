@@ -1,8 +1,5 @@
 import gradio as gr
-from app.utils.callbacks import stream_chat_interface, upload_and_process_files, store_structured_files, store_to_vector_db, clear_uploads, stream_summary_response, update_choices, skill_scoring_interface_single_skill, skill_scoring_interface_single_candidate, update_candidate_choices, UPLOAD_DIR, CV_DIR
-
-UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
-CV_DIR.mkdir(parents=True, exist_ok=True)
+from app.utils.callbacks import stream_chat_interface, upload_and_process_files, store_structured_files, store_to_vector_db, clear_uploads, stream_summary_response, update_choices, skill_scoring_interface_single_skill, skill_scoring_interface_single_candidate, update_candidate_choices
         
 
 with gr.Blocks(title="Smart Recruiter Assistant", css="""

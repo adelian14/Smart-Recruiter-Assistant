@@ -1,7 +1,5 @@
 import pandas as pd
 import gradio as gr
-import matplotlib.pyplot as plt
-import seaborn as sns
 import pandas as pd
 import plotly.graph_objects as go
 import plotly.express as px
@@ -13,9 +11,8 @@ from app.summarizer import stream_summary
 from app.skill_assessor import skill_scoring
 from app.utils.parser import parse_multiple, structure_and_save
 from app.utils.embedding import create_chroma
+from app.utils.config import settings
 
-UPLOAD_DIR = Path("data/uploads")
-CV_DIR = Path("data/sample_cvs")
 uploaded_files = []
 parsed_files = []
 
@@ -39,7 +36,7 @@ def upload_and_process_files(files):
     uploaded_files = []
     for f in files:
         filename = os.path.basename(f.name)
-        file_path = UPLOAD_DIR / filename
+        file_path = settings.UPLOAD_DIR / filename
         shutil.copy(f.name, file_path)
         uploaded_files.append(file_path)
 
@@ -50,7 +47,7 @@ def upload_and_process_files(files):
     return f"🟡 Uploaded {len(uploaded_files)} file(s)."
 
 def store_structured_files():
-    upload_paths = list(UPLOAD_DIR.glob("*"))
+    upload_paths = list(settings.UPLOAD_DIR.glob("*"))
 
     if not upload_paths:
         return "⚠️ No uploaded files found."
@@ -82,14 +79,14 @@ def clear_uploads():
     upload_removed = 0
     processed_removed = 0
 
-    for f in UPLOAD_DIR.glob("*"):
+    for f in settings.UPLOAD_DIR.glob("*"):
         try:
             f.unlink()
             upload_removed += 1
         except Exception as e:
             print(f"⚠️ Could not delete {f.name}: {e}")
 
-    for f in CV_DIR.glob("*"):
+    for f in settings.CVS_DIR.glob("*"):
         try:
             f.unlink()
             processed_removed += 1
@@ -102,15 +99,15 @@ def clear_uploads():
     return upload_msg, processed_msg
 
 def get_file_stems() -> list[str]:
-    path = Path(CV_DIR)
+    path = Path(settings.CVS_DIR)
     if not path.exists() or not path.is_dir():
-        raise ValueError(f"Invalid directory: {CV_DIR}")
+        raise ValueError(f"Invalid directory: {settings.CVS_DIR}")
 
     stems = [file.stem for file in path.iterdir() if file.is_file()]
     return stems
 
 def retrieve_candidate_context(candidate_name: str) -> str:
-    file_path = Path(CV_DIR) / f"{candidate_name}.txt"
+    file_path = Path(settings.CVS_DIR) / f"{candidate_name}.txt"
     if not file_path.exists():
         raise FileNotFoundError(f"Context file not found for: {candidate_name}")
     

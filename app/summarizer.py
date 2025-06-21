@@ -10,9 +10,6 @@ llm = ChatOllama(
     streaming=True
 )
 
-
-from langchain_core.prompts import ChatPromptTemplate
-
 prompt = ChatPromptTemplate.from_template("""
 You are an expert recruitment assistant. Read the full CV of a candidate and generate a professional, well-structured summary.
 

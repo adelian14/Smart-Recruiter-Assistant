@@ -28,7 +28,7 @@ pip-log.txt
 # Application-specific
 data/uploads/
 data/logs/
-data/sample_cvs/
+data/txt_cvs/
 data/vector_db/
 data/chunks_log.txt
 

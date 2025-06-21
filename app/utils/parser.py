@@ -1,14 +1,12 @@
 import fitz
 import docx2txt
-import os
 from typing import List
 from pathlib import Path
 from app.utils.llm_extractor import get_candidate_name
+from app.utils.config import settings
 import re
 
 SUPPORTED_EXTENSIONS = [".pdf", ".docx", ".txt"]
-STRUCTURED_CV_DIR = Path("data/sample_cvs")
-STRUCTURED_CV_DIR.mkdir(parents=True, exist_ok=True)
 
 def parse_pdf(file_path: Path) -> str:
     text = ""
@@ -68,7 +66,7 @@ def structure_and_save(parsed_cvs: List[dict]) -> List[Path]:
             parsed['candidate_name']=candidate_name
                 
             out_name = Path(parsed['candidate_name']).stem + ".txt"
-            out_path = STRUCTURED_CV_DIR / out_name
+            out_path = settings.CVS_DIR / out_name
 
             with open(out_path, "w", encoding="utf-8") as f:
                 f.write(parsed['text'])

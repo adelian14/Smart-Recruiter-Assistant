@@ -1,9 +1,10 @@
 import datetime
 from pathlib import Path
 from langchain_core.documents import Document
+from app.utils.config import settings
 
-PROMPT_LOG_FILE = Path("data/logs/debug_logs.txt")
-CHUNKS_LOG_FILE = Path("data/logs/chunks_log.txt")
+PROMPT_LOG_FILE = settings.LOG_DIR / Path("debug_logs.txt")
+CHUNKS_LOG_FILE = settings.LOG_DIR / Path("chunks_log.txt")
 
 def log_debug(question: str, context: str):
     timestamp = datetime.datetime.now().isoformat()

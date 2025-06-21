@@ -2,7 +2,7 @@ from langchain_ollama import ChatOllama
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.runnables import Runnable
 from app.utils.config import settings
-from app.utils.embedding import load_chroma  # ← Loads the vector store
+from app.utils.embedding import load_chroma
 from app.utils.logger import log_debug
 from langchain_core.documents import Document
 from collections import defaultdict
