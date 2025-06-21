@@ -1,16 +1,10 @@
 import gradio as gr
-from chatbot import stream_answer
-import os
-import shutil
-from pathlib import Path
-from utils.parser import parse_multiple, structure_and_save
-from utils.embedding import create_chroma
-from utils.callbacks import stream_chat_interface, upload_and_process_files, store_structured_files, store_to_vector_db, clear_uploads, get_file_stems, stream_summary_response, UPLOAD_DIR, CV_DIR, uploaded_files, parsed_files
+from app.utils.callbacks import stream_chat_interface, upload_and_process_files, store_structured_files, store_to_vector_db, clear_uploads, stream_summary_response, update_choices, skill_scoring_interface_single_skill, skill_scoring_interface_single_candidate, update_candidate_choices, UPLOAD_DIR, CV_DIR
 
 UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
 CV_DIR.mkdir(parents=True, exist_ok=True)
+        
 
-# === UI ===
 with gr.Blocks(title="Smart Recruiter Assistant", css="""
 #status-row {
     display: flex;
@@ -40,12 +34,11 @@ with gr.Blocks(title="Smart Recruiter Assistant", css="""
     flex: 0 0 15%;
     height: 42px;
 }
-""") as demo:
+""") as app:
 
     gr.Markdown("## 🤖 Smart Recruiter Assistant")
 
     with gr.Tabs():
-        # === Tab 1: Upload & Process ===
         with gr.Tab("📁 Upload & Process CVs"):
             file_upload = gr.File(
                 label="Upload CVs",
@@ -67,7 +60,6 @@ with gr.Blocks(title="Smart Recruiter Assistant", css="""
             store_btn.click(store_to_vector_db, inputs=None, outputs=store_status)
             clear_btn.click(clear_uploads, inputs=None, outputs=[upload_status,process_status])
 
-        # === Tab 2: Chatbot ===
         with gr.Tab("💬 CV Chatbot"):
             chatbot = gr.Chatbot(height=600)
             with gr.Row(elem_id="input-row"):
@@ -94,30 +86,92 @@ with gr.Blocks(title="Smart Recruiter Assistant", css="""
                 outputs=[chatbot, state, txt]
             )
         
-        with gr.Tab("📄 CV Summarizer"):
+        with gr.Tab("📄 CV Summarizer") as summarizer_tab:
             with gr.Row():
                 candidate_dropdown = gr.Dropdown(
                     label="Select a Candidate",
-                    choices=get_file_stems(),
+                    choices=[],
                     interactive=True,
-                    elem_id="candidate-dropdown"
+                    elem_id="candidate-dropdown",
+                    scale=10
                 )
-                summarize_btn = gr.Button("📝 Summarize")
+                summarize_btn = gr.Button("📝 Summarize",scale=2)
+
                 
             cv_summary_display = gr.Chatbot(
                 label="Summary Output",
                 height=500,
                 elem_id="summary-display"
             )
-
-
-            # Streamed response — same pattern as chatbot
+            
+            summarizer_tab.select(
+                fn=update_candidate_choices,
+                inputs=None,
+                outputs=candidate_dropdown
+            )
+            
             summarize_btn.click(
-                fn=stream_summary_response,  # ← define later
+                fn=stream_summary_response,
                 inputs=[candidate_dropdown],
                 outputs=[cv_summary_display]
             )
+        
+        with gr.Tab("📊 Skill Assessor"):
+            
+            gr.Markdown("### Estimate Skill Relevance for Each CV")
+            with gr.Row():
+                skill_input = gr.Textbox(
+                    label="Enter Skills (comma-separated)", 
+                    placeholder="e.g., Python, TensorFlow, Docker",
+                    scale=10
+                )
+                score_button = gr.Button("Assess Candidate Skills", scale=2)
+                
+            with gr.Tab('🧠 Skill Focus View'):
+                skill_selector = gr.Dropdown(choices=[], label="Select Skill")
+                plot_output = gr.Plot()
+                
+                skill_selector.change(
+                    fn=skill_scoring_interface_single_skill,
+                    inputs=[skill_input,skill_selector],
+                    outputs=plot_output
+                )
+            with gr.Tab('👤 Candidate Focus View'):
+                candidate_dropdown_skills = gr.Dropdown(label="Select a Candidate",choices=[])
+                plot_output_candidate = gr.Plot()
+                
+                candidate_dropdown_skills.change(
+                    fn = skill_scoring_interface_single_candidate,
+                    inputs=[skill_input, candidate_dropdown_skills],
+                    outputs=plot_output_candidate
+                )
+                
+            score_button.click(
+                fn=update_choices,
+                inputs=skill_input,
+                outputs=[skill_selector, candidate_dropdown_skills]
+            )
+
+            gr.Markdown("""
+            #### 📌 How to Interpret the Bar Chart
+
+            - The chart shows **how often each candidate mentioned a specific skill**.
+            - Use the skill dropdown to select one skill at a time.
+            - Bars represent candidates; the length of the bar shows mention frequency.
+            - The count is based on exact and related keyword appearances in the CV.
+
+            This is helpful for **quickly spotting which candidates emphasize certain skills**.
+            """)
+
+            gr.Markdown("""
+            #### ⚠️ Disclaimer
+            This scoring system uses traditional NLP techniques (not deep learning) and relies on term frequency patterns in the CV text.
+
+            It **does not guarantee actual proficiency** or intent. A high score means the skill is mentioned more prominently — not necessarily that the candidate is highly skilled in it.
+
+            Always combine automated scores with human judgment.
+            """, elem_classes=["text-xs", "text-gray-500"])
 
 
-if __name__ == "__main__":
-    demo.launch()
+            
+            

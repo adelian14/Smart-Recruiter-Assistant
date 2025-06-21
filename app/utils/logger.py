@@ -1,4 +1,3 @@
-# utils/logger.py
 import datetime
 from pathlib import Path
 from langchain_core.documents import Document

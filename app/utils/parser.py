@@ -1,11 +1,10 @@
-# app/utils/parser.py
-
-import fitz  # PyMuPDF
+import fitz
 import docx2txt
 import os
 from typing import List
 from pathlib import Path
-from .llm_extractor import get_candidate_name
+from app.utils.llm_extractor import get_candidate_name
+import re
 
 SUPPORTED_EXTENSIONS = [".pdf", ".docx", ".txt"]
 STRUCTURED_CV_DIR = Path("data/sample_cvs")
@@ -70,12 +69,6 @@ def structure_and_save(parsed_cvs: List[dict]) -> List[Path]:
                 
             out_name = Path(parsed['candidate_name']).stem + ".txt"
             out_path = STRUCTURED_CV_DIR / out_name
-
-            #if out_path.exists() and out_path.stat().st_size > 10:
-                #print(f"⏭️ Skipping already structured: {out_path.name}")
-                #saved_paths.append(out_path)
-                #continue
-
 
             with open(out_path, "w", encoding="utf-8") as f:
                 f.write(parsed['text'])

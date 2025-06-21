@@ -1,9 +1,8 @@
-# app/stream_summary.py
 from langchain_ollama import ChatOllama
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.runnables import Runnable
-from utils.config import settings
-from utils.logger import log_debug
+from app.utils.config import settings
+from app.utils.logger import log_debug
 
 llm = ChatOllama(
     model=settings.LLM_MODEL,
@@ -39,12 +38,9 @@ CV:
 Summary:
 """)
 
-
-# Chain
 summary_chain = prompt | llm
 
-# Main function
 def stream_summary(cv: str):
-    log_debug("Summarizing CV", cv[:500])  # log first 500 chars for traceability
+    log_debug("Summarizing CV", cv[:500])
     for chunk in summary_chain.stream({"cv": cv}):
         yield chunk.content

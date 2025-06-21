@@ -2,8 +2,8 @@ from langchain_community.vectorstores import Chroma
 from langchain_community.document_loaders import TextLoader
 from langchain_core.documents import Document
 from langchain_ollama import OllamaEmbeddings
-from .config import settings
-from .logger import log_chunks_to_file
+from app.utils.config import settings
+from app.utils.logger import log_chunks_to_file
 from pathlib import Path
 
 
@@ -33,7 +33,6 @@ def chunk_cvs(texts: list[str], metadatas: list[dict], chunk_size: int = 50, ove
         start = 0
         while start < len(words):
             end = start + chunk_size
-            # If it's the final chunk and too small, merge with previous
             if len(words) - start < chunk_size // 2 and chunks:
                 chunks[-1].extend(words[start:])
                 break
@@ -50,7 +49,6 @@ def chunk_cvs(texts: list[str], metadatas: list[dict], chunk_size: int = 50, ove
             all_docs.append(Document(page_content=chunk, metadata=metadata))
     
     return all_docs
-
 
 def get_cv_documents():
     texts = []
@@ -76,7 +74,6 @@ def create_chroma():
             persist_directory=str(CHROMA_DIR)
         )
 
-        # Fetch and delete all IDs manually
         all_ids = vectorstore._collection.get()["ids"]
         if all_ids:
             vectorstore._collection.delete(ids=all_ids)
@@ -89,13 +86,11 @@ def create_chroma():
         CHROMA_DIR.mkdir(parents=True, exist_ok=True)
         vectorstore = None
 
-    # Load current documents
     documents = get_cv_documents()
     if not documents:
         print("⚠️ No valid CVs to embed.")
         return None
 
-    # Rebuild ChromaDB with clean data
     vectorstore = Chroma.from_documents(
         documents=documents,
         embedding=embedding_model,

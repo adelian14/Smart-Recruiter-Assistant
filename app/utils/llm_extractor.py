@@ -1,6 +1,6 @@
 from langchain_ollama import ChatOllama
 from langchain_core.prompts import ChatPromptTemplate
-from .config import settings
+from app.utils.config import settings
 
 llm = ChatOllama(
     model=settings.LLM_MODEL,

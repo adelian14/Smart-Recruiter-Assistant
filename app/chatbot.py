@@ -1,10 +1,9 @@
-# app/chatbot.py
 from langchain_ollama import ChatOllama
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.runnables import Runnable
-from utils.config import settings
-from utils.embedding import load_chroma  # ← Loads the vector store
-from utils.logger import log_debug
+from app.utils.config import settings
+from app.utils.embedding import load_chroma  # ← Loads the vector store
+from app.utils.logger import log_debug
 from langchain_core.documents import Document
 from collections import defaultdict
 
@@ -17,7 +16,6 @@ llm = ChatOllama(
 vectorstore = load_chroma()
 retriever = vectorstore.as_retriever(search_type="similarity", search_kwargs={"k": 15})
 
-# Prompt template
 prompt = ChatPromptTemplate.from_template("""
 You are a skilled recruitment assistant. The context below contains partial excerpts from candidate CVs.
 
@@ -37,21 +35,19 @@ Answer:
 """)
 
 
-
-# Chain
 chain = prompt | llm
 
 def stream_answer(question: str):
-    # Step 1: Retrieve documents
+    # Retrieve documents
     docs: list[Document] = retriever.invoke(question)
 
-    # Step 2: Group chunks by candidate filename
+    # Group chunks by candidate filename
     grouped_docs = defaultdict(list)
     for doc in docs:
         key = doc.metadata.get("candidate_name", "unknown")
         grouped_docs[key].append(doc.page_content)
 
-    # Step 3: Construct context block for each candidate
+    # Construct context block for each candidate
     full_context = ''
     for candidate, texts in grouped_docs.items():
         block = "\n".join(texts)
@@ -60,7 +56,7 @@ def stream_answer(question: str):
     
     log_debug(question, full_context)
     
-    # Step 5: Stream the response from LLM
+    # Stream the response from LLM
     for chunk in chain.stream({"question": question, "context": full_context}):
         yield chunk.content
 
