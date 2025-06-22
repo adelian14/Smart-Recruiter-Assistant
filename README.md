@@ -7,21 +7,31 @@ Certainly — here is your structured and clean **Table of Contents** in plain t
 
 ## Table of Contents
 
-1. [Purpose](#1-purpose)  
-2. [Features](#2-features)  
-   - [Question Answering (QA) Across CVs](#21-question-answering-qa-across-cvs)  
-   - [CV Summarization](#22-cv-summarization)  
-   - [Candidate Comparison and Skill Analysis](#23-candidate-comparison-and-skill-analysis)  
-   - [CV Ingestion and File Handling](#24-cv-ingestion-and-file-handling)  
-   - [LLM Integration (Local)](#25-llm-integration-local)  
-   - [Web Interface](#26-web-interface)  
-3. [Installation and Setup](#3-installation-and-setup)  
-   - [Requirements](#31-requirements)  
-   - [Step-by-Step Guide](#32-step-by-step-guide)  
-4. [Project Structure](#4-project-structure)  
-5. [Problem Solving and Challenges](#5-problem-solving-and-challenges)  
-   - [Challenge: Chunking CVs for RAG](#51-challenge-chunking-cvs-for-rag)  
-   - [Challenge: Making TF-IDF Skill Scoring Work](#52-challenge-making-tf-idf-skill-scoring-work)  
+1. [Purpose](#1-purpose)
+2. [Features](#2-features)
+    - [Question Answering (QA) Across CVs](#21-question-answering-qa-across-cvs)
+    - [CV Summarization](#22-cv-summarization)
+    - [Candidate Comparison and Skill Analysis](#23-candidate-comparison-and-skill-analysis)
+    - [CV Ingestion and File Handling](#24-cv-ingestion-and-file-handling)
+    - [LLM Integration (Local)](#25-llm-integration-local)
+    - [Web Interface](#26-web-interface)
+3. [Installation and Setup](#3-installation-and-setup)
+    - [Requirements](#31-requirements)
+    - [Step-by-Step Guide](#32-step-by-step-guide)
+        - [Clone the Repository](#1-clone-the-repository)
+        - [Create a Virtual Environment](#2-create-a-virtual-environment-recommended)
+        - [Install Dependencies](#3-install-dependencies)
+        - [Install and Start Ollama](#4-install-and-start-ollama)
+        - [Run the App](#5-run-the-app)
+4. [Project Structure](#4-project-structure)
+5. [Problem Solving and Challenges](#5-problem-solving-and-challenges)
+    - [Challenge: Chunking CVs for RAG](#51-challenge-chunking-cvs-for-rag)
+        - [Attempt 1: Standard Chunking with a Catch](#attempt-1-standard-chunking-with-a-catch)
+        - [Attempt 2: Structured LLM Rewriting + Sectional Chunking](#attempt-2-structured-llm-rewriting--sectional-chunking)
+        - [Attempt 3: Realistic RAG with Metadata and Prompt Engineering](#attempt-3-realistic-rag-with-metadata-and-prompt-engineering)
+    - [Challenge: Making TF-IDF Skill Scoring Work](#52-challenge-making-tf-idf-skill-scoring-work)
+        - [Problem 1: Special Character Skills Not Detected](#problem-1-special-character-skills-not-detected)
+        - [Problem 2: Misleading Score Interpretation](#problem-2-misleading-score-interpretation)
 6. [Final Thoughts](#6-final-thoughts)
 
 <hr style="height:2px; background-color:#ccc; border:none;" />
@@ -274,7 +284,7 @@ Perfect — here’s the next subsection for the **Problem Solving and Challenge
 
 Using TF-IDF might sound like a plug-and-play solution for keyword relevance — but in practice, it was anything but.
 
-#### Problem 1: C++ ≠ Recognized
+#### Problem 1: Special Character Skills Not Detected
 
 Right out of the gate, I noticed something weird. Terms like `C++` were returning **zero scores**, even though they clearly appeared in the CVs. The reason? The default tokenizer behind `TfidfVectorizer` silently dropped symbols like `+`, `#`, or even dots. It was never trained to handle skill names — only “words.”
 
@@ -295,7 +305,7 @@ To handle this:
 
 These refinements made token matching much more accurate, and skills like `C++` finally showed up as valid TF-IDF terms.
 
-#### Problem 2: The Score Means Nothing…?
+#### Problem 2: Misleading Score Interpretation
 
 Once tokenization was fixed, another issue surfaced: **the numbers weren’t helpful**. Raw TF-IDF scores varied wildly and didn’t mean much to a recruiter. A term could appear once and get a higher score than another term that appeared ten times in another CV — due to inverse document frequency.
 

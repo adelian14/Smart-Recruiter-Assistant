@@ -62,7 +62,7 @@ def store_structured_files():
     if not structured_paths:
         return "❌ Structuring failed."
 
-    return f"✅ Structured and saved {len(structured_paths)} CV(s) from uploaded files."
+    return f"✅ Porcessed {len(structured_paths)} CV(s) from uploaded files."
 
 def store_to_vector_db():
     vectorstore = create_chroma()
