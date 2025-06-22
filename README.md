@@ -1,10 +1,32 @@
-# 🧠 Smart Recruiter Assistant
+# Smart Recruiter Assistant
 
 A **Retrieval-Augmented Generation (RAG)** application that helps recruiters make informed hiring decisions by **analyzing candidate CVs** and **answering custom questions** using advanced NLP and LLMs.
 
+Certainly — here is your structured and clean **Table of Contents** in plain text, suitable for a README:
 
 
-## 🎯 Purpose
+## Table of Contents
+
+1. [Purpose](#purpose)  
+2. [Features](#features)  
+   - [Question Answering (QA) Across CVs](#question-answering-qa-across-cvs)  
+   - [CV Summarization](#cv-summarization)  
+   - [Candidate Comparison and Skill Analysis](#candidate-comparison-and-skill-analysis)  
+   - [CV Ingestion and File Handling](#cv-ingestion-and-file-handling)  
+   - [LLM Integration (Local)](#llm-integration-local)  
+   - [Web Interface](#web-interface)  
+3. [Installation and Setup](#installation-and-setup)  
+   - [Requirements](#requirements)  
+   - [Step-by-Step Guide](#step-by-step-guide)  
+4. [Project Structure](#project-structure)  
+5. [Problem Solving and Challenges](#problem-solving-and-challenges)  
+   - [Challenge: Chunking CVs for RAG](#challenge-chunking-cvs-for-rag)  
+   - [Challenge: Making TF-IDF Skill Scoring Work](#challenge-making-tf-idf-skill-scoring-work)  
+6. [Final Thoughts](#final-thoughts)
+
+
+
+## `1` Purpose
 
 Hiring is time-consuming. Recruiters often spend hours reading and comparing CVs, trying to extract relevant insights under pressure.
 
@@ -19,62 +41,59 @@ Hiring is time-consuming. Recruiters often spend hours reading and comparing CVs
 This tool isn’t just a static demo — it works on live, user-uploaded data. While not fully production-ready yet, it's a **functional prototype** designed for real-world use and feedback.
 
 
-## 🚀 Features
+## `2` Features
 
 The **Smart Recruiter Assistant** is a robust RAG-based application designed to streamline the candidate evaluation process. It combines traditional NLP techniques with the reasoning power of LLMs to help recruiters make informed decisions faster. Here’s a breakdown of what it offers:
 
-### ❓ Question Answering (QA) Across CVs
+### `2.1` Question Answering (QA) Across CVs
 
 * Allows recruiters to ask natural language questions (e.g., *“Who has experience with deploying machine learning models?”*).
 * Uses semantic similarity and RAG techniques to retrieve relevant chunks from all CVs and respond accurately.
 * Answers are factual, pulled directly from content — no hallucinated information.
 
-### 🧾 CV Summarization
+### `2.2` CV Summarization
 
 * Automatically generates concise summaries of each candidate's CV using an LLM.
 * Focuses on factual information, highlighting key qualifications, experience, and skill sets.
 * Ignores filler content (like over-hyped objectives) to provide clean, useful summaries.
 
-### 🧠 Candidate Comparison & Skill Analysis
+### `2.3` Candidate Comparison & Skill Analysis
 
 * While not comparing candidates side-by-side directly, the assistant allows for:
 
   * **Skill-specific questioning**, like *“Who has more experience in deep learning?”*
   * **Term-frequency-based skill scoring**, ranking candidates by how prominently a skill is mentioned.
 * Great for identifying strengths and weaknesses in technical areas at a glance.
-
-### 📊 Interactive Visualization
-
-* Provides clear and insightful visualizations of skill relevance using **Plotly** and **Gradio**.
+* Interactive visualization provides clear and insightful visualizations of skill relevance using **Plotly** and **Gradio**.
 * Recruiters can:
 
   * Select a skill and see which candidates emphasize it most.
   * Select a candidate and explore which skills are most (or least) mentioned in their CV.
 
-### 📁 CV Ingestion and File Handling
+### `2.4` CV Ingestion and File Handling
 
 * Accepts multiple formats: `.txt`, `.pdf`, `.docx`, etc.
 * CVs can be uploaded at any time during a session — doesn’t require batch processing.
 * All uploaded CVs are automatically parsed and indexed for analysis.
 
-### 🧩 LLM Integration (Local)
+### `2.5` LLM Integration (Local)
 
 * Powered by **LLaMA 3.1**, running via **Ollama** for fast local inference.
 * No API tokens or cloud costs — great for development and experimentation.
 * Not yet optimized for production, but it runs on real, live recruiter data.
 
-### 🌐 Web Interface
+### `2.6` Web Interface
 
 * Built with **Gradio**, the UI is clean, tabbed, and responsive.
 * Different tabs serve different goals: summarization, skill assessment, and analysis.
 * Users interact naturally — no coding or manual prompt-writing required.
 
 
-## 🛠️ Installation & Setup
+## `3` Installation & Setup
 
 Follow these steps to get the **Smart Recruiter Assistant** running locally.
 
-### ✅ Requirements
+### `3.1` Requirements
 
 * **Python** 3.10+
 * **pip** (comes with Python)
@@ -83,7 +102,7 @@ Follow these steps to get the **Smart Recruiter Assistant** running locally.
 
 ---
 
-### 📦 Step-by-Step Guide
+### `3.2` Step-by-Step Guide
 
 #### 1. Clone the Repository
 
@@ -96,8 +115,8 @@ cd smart-recruiter-assistant
 
 ```bash
 # With venv
-python3.10 -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
+py -3.10 -m venv app-env
+app-env\Scripts\activate
 ```
 
 #### 3. Install Dependencies
@@ -109,7 +128,7 @@ pip install -r requirements.txt
 #### 4. Install and Start Ollama
 
 * Follow official setup: [https://ollama.com/download](https://ollama.com/download)
-* Pull the LLaMA 3.1 model:
+* Pull and run LLaMA 3.1 model:
 
 ```bash
 ollama pull llama3.1
@@ -129,7 +148,7 @@ python run.py
 * No manual `.env` editing is needed — a default file is already included
 
 
-## 🔍 Project Structure
+## `4` Project Structure
 
 Below is a breakdown of the project’s folder layout and what each component does:
 
@@ -156,7 +175,7 @@ Below is a breakdown of the project’s folder layout and what each component do
 ├── .env                     # Environment config (safe to leave as-is)
 ├── .gitignore               # Git ignore file
 ├── requirements.txt         # All necessary dependencies
-├── README.md                # You're reading it 🙂
+├── README.md                # You're reading it
 └── run.py                   # Launch script to start the app
 ```
 
@@ -167,13 +186,13 @@ This modular structure ensures separation of concerns:
 * You can plug in new models or UI layers with minimal rewiring.
 
 
-## 🧠 Problem Solving and Challenges
+## `5` Problem Solving and Challenges
 
 Building a system like the Smart Recruiter Assistant wasn't just a matter of connecting APIs or following a standard Retrieval-Augmented Generation (RAG) recipe. Many of the real challenges emerged from edge cases, subtle model behaviors, and the friction between theory and practical results. Below are some of the major hurdles encountered during development, how I approached them, and what lessons were learned.
 
 ---
 
-### 📚 Challenge: Chunking CVs for RAG — The Battle Against Information Bleed
+### `5.1` Challenge: Chunking CVs for RAG
 
 One of the most deceptively tricky parts of building this project was **chunking candidate CVs** for retrieval. It sounds straightforward — split a document, embed chunks, search with a query — but it turned into a war of trade-offs, hallucinations, and weird edge cases.
 
@@ -221,9 +240,9 @@ I returned to **regular chunking**, but this time, I added two critical upgrades
 
 This struck the perfect balance:
 
-* ✅ It preserved chunk size consistency (for better embedding quality).
-* ✅ It avoided cross-contamination.
-* ✅ It was fast and robust, with **no need for costly LLM restructuring**.
+* It preserved chunk size consistency (for better embedding quality).
+* It avoided cross-contamination.
+* It was fast and robust, with **no need for costly LLM restructuring**.
 
 #### Bonus Insight: Getting the Candidate Name
 
@@ -246,7 +265,7 @@ Perfect — here’s the next subsection for the **Problem Solving and Challenge
 
 ---
 
-### 🧪 Challenge: Making TF-IDF Skill Scoring Work — From Confusion to Clarity
+### `5.2` Challenge: Making TF-IDF Skill Scoring Work
 
 Using TF-IDF might sound like a plug-and-play solution for keyword relevance — but in practice, it was anything but.
 
@@ -303,7 +322,7 @@ To make the data usable, I plugged these scores into an **interactive visualizat
 Combined with a good interface and some dark-mode aesthetics, it became a useful feature — even if it didn’t try to predict competence. It helped recruiters **filter noise and spot possible fits** faster.
 
 
-## 🧩 Final Thoughts
+## `6` Final Thoughts
 
 The **Smart Recruiter Assistant** isn’t just a proof of concept — it’s a serious step toward modernizing how hiring decisions are made. In an age where recruiters are bombarded with countless resumes, this tool offers a way to **cut through the noise**, highlight what's relevant, and **make the hiring process more efficient and informed**.
 
